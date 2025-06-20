@@ -11,10 +11,11 @@
       const canvas = document.querySelector("canvas");
       const ctx = canvas.getContext("2d");
 
-      const ms = 100; 
+      const ms = 17; 
       const frictionLoss = 0.2 / (1000 / ms); 
       const r = 100;
 
+      let g = 0; // 0 - gravity off (side view), 1 - gravity on(top view)
       let balls = {};
       let numOfBalls;
 
@@ -33,25 +34,64 @@
 
       class Ball {
         constructor(name, color, x, speed) {
+          // ball
           this.name = name;
           this.color = color;
           this.r = r;
           this.range = choice(ranges)
           this.x = getRandomInt(this.range[0], this.range[1]); 
           this.y = canvas.height - getRandomInt(this.r, canvas.height - this.r); 
-          this.xSpeed = getRandomInt(-50, 50);
-          this.ySpeed = 0;
-          this.g = 1;
+          this.xSpeed = getRandomInt(-10, 10);
+          this.ySpeed = getRandomInt(-10, 10);
           this.moving = true;
-          this.updateRanges();
+          this._updatePos();
           this._draw();
+          this._updateRanges();
+          // inner square 
+
+          //this.g = g;    
+          }
+
+        _drawBall() {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          ctx.fill(); 
+        }  
+
+        _drawInnerSquare() {
+          ctx.strokeStyle = "black";
+          ctx.beginPath();
+          ctx.moveTo(this.x1, this.y1);
+          ctx.lineTo(this.x2, this.y2);
+          ctx.lineTo(this.x3, this.y3);
+          ctx.lineTo(this.x4, this.y4);
+          ctx.lineTo(this.x1, this.y1);
+          ctx.stroke();
+        }  
+
+        _draw() {
+          this._drawBall();
+          this._drawInnerSquare();
+        }  
+
+        _updatePos() {
+          this.x += this.xSpeed;
+          this.y += this.ySpeed;
+          this.x1 = this.x - r;
+          this.y1 = this.y;
+          this.x2 = this.x;
+          this.y2 = this.y - r;
+          this.x3 = this.x + r;
+          this.y3 = this.y;
+          this.x4 = this.x;
+          this.y4 = this.y + r;
         }
 
         move() {
           if (this.moving === true) {
-            this.ySpeed += this.g;
-            this.x += this.xSpeed;
-            this.y += this.ySpeed;
+            // this.ySpeed += this.g;
+            this._updatePos();
             this._checkBorderCollision();
             this._checkRolling();
             if (Math.abs(this.xSpeed) < 0.1) this.moving = false; 
@@ -59,7 +99,7 @@
           this._draw(); 
         }
 
-        updateRanges() {
+        _updateRanges() {
           for (let i = 0; i < ranges.length; i++) { // pick one range after another
             let [rangeMin, rangeMax] = ranges[i]
             if (this.x >= rangeMin && this.x <= rangeMax) { // the ball has found the range 
@@ -78,14 +118,7 @@
               break;
             }
           }
-        }
-
-        _draw() {
-          ctx.fillStyle = this.color;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-          ctx.fill(); 
-        };   
+        }    
 
         _checkBorderCollision() {
           if ((this.x > canvas.width - this.r && this.xSpeed > 0) || // right border
@@ -148,7 +181,6 @@
           };
         };
 
-
       function ballsFactory(num) {
         let n = 1;
         let colors = ["black", "red", "blue", "orange", "yellow", "green", "indigo", "violet", "silver"]
@@ -161,7 +193,7 @@
         numOfBalls = Object.keys(balls).length; // update the number of balls
       }
 
-      ballsFactory(10);
+      ballsFactory(1);
       
       const intervalId = setInterval( () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
