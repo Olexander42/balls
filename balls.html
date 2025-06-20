@@ -44,54 +44,23 @@
           this.xSpeed = getRandomInt(-10, 10);
           this.ySpeed = getRandomInt(-10, 10);
           this.moving = true;
-          this._updatePos();
           this._draw();
           this._updateRanges();
-          // inner square 
-
           //this.g = g;    
           }
 
-        _drawBall() {
+        _draw() {
           ctx.fillStyle = this.color;
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
           ctx.fill(); 
         }  
 
-        _drawInnerSquare() {
-          ctx.strokeStyle = "black";
-          ctx.beginPath();
-          ctx.moveTo(this.x1, this.y1);
-          ctx.lineTo(this.x2, this.y2);
-          ctx.lineTo(this.x3, this.y3);
-          ctx.lineTo(this.x4, this.y4);
-          ctx.lineTo(this.x1, this.y1);
-          ctx.stroke();
-        }  
-
-        _draw() {
-          this._drawBall();
-          this._drawInnerSquare();
-        }  
-
-        _updatePos() {
-          this.x += this.xSpeed;
-          this.y += this.ySpeed;
-          this.x1 = this.x - r;
-          this.y1 = this.y;
-          this.x2 = this.x;
-          this.y2 = this.y - r;
-          this.x3 = this.x + r;
-          this.y3 = this.y;
-          this.x4 = this.x;
-          this.y4 = this.y + r;
-        }
-
         move() {
           if (this.moving === true) {
             // this.ySpeed += this.g;
-            this._updatePos();
+            this.x += this.xSpeed;
+            this.y += this.ySpeed;
             this._checkBorderCollision();
             this._checkRolling();
             if (Math.abs(this.xSpeed) < 0.1) this.moving = false; 
