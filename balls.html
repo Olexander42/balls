@@ -4,7 +4,7 @@
     <title>BALLS</title>
   </head>
   <body style="text-align: center;">
-    <canvas width="1700" height="700" style="border: solid 1px gray"></canvas>
+    <canvas width="1000" height="1000" style="border: solid 1px gray"></canvas>
     
     <script>
       // some balls still get stuck after collision
@@ -39,21 +39,32 @@
           this.color = color;
           this.r = r;
           this.range = choice(ranges)
-          this.x = getRandomInt(this.range[0], this.range[1]); 
-          this.y = canvas.height - getRandomInt(this.r, canvas.height - this.r); 
+          this.x = 500 // getRandomInt(this.range[0], this.range[1]); 
+          this.y = 500 //canvas.height - getRandomInt(this.r, canvas.height - this.r); 
           this.xSpeed = getRandomInt(-10, 10);
           this.ySpeed = getRandomInt(-10, 10);
           this.moving = true;
+          this.points = this._circlePoints();
           this._draw();
           this._updateRanges();
           //this.g = g;    
           }
 
         _draw() {
+          // draw the ball
           ctx.fillStyle = this.color;
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
           ctx.fill(); 
+          // draw the circle points on the ball
+          ctx.fillStyle = "black";
+          this.points = this._circlePoints();
+          for (let i = 0; i < this.points.length; i++) {
+            ctx.beginPath();
+            let [pointX, pointY] = this.points[i];
+            ctx.arc(pointX, pointY, 5, 0, Math.PI * 2)
+            ctx.fill();
+          }
         }  
 
         move() {
@@ -88,6 +99,31 @@
             }
           }
         }    
+
+        _circlePoints() {
+          let points = [];
+          let divisors = [1, 1.25, 1.5, 2, 3, 6, 180, -1.25, -1.5, -2, -3, -6];
+          // first half
+          for (let i = 0; i < divisors.length; i++) {
+            let k = divisors[i]
+            let sin = Math.sin(Math.PI / k);
+            let cos = Math.cos(Math.PI / k);
+            let x = this.x - this.r * sin;
+            let y = this.y - this.r * cos;
+            points.unshift([x, y]);
+          }
+          return points; 
+        }
+
+        insideCircle(x2, y2) {
+        let a = x2 - this.x; // first cathetus length
+        let b = y2 - this.y; // second cathetus length
+        let c = Math.floor(Math.sqrt(a * a + b * b)); // hypothenuse length
+        if (c <= this.r) {
+          return true;
+        }
+        return false;
+        }
 
         _checkBorderCollision() {
           if ((this.x > canvas.width - this.r && this.xSpeed > 0) || // right border
@@ -128,31 +164,13 @@
           let ball1 = ballGrabber(balls, n1)
           for (let n2 = n1 + 1; n2 <= numOfBalls; n2++) { // start right after key1
             let ball2 = ballGrabber(balls, n2);
-            if (Math.abs(ball1.x - ball2.x) <= r * 2)  { // balls touch each other
-                if (ball1.xSpeed * ball2.xSpeed > 0 && Math.abs(ball1.xSpeed) > Math.abs(ball2.xSpeed)) { // if ball1 and ball2 move in the same direction but ball1 hits ball2
-                  ball2.xSpeed += ball1.xSpeed * 0.25; // ball2 adds energy
-                  ball1.x -= ball1.xSpeed; // ball1 bounces back
-                  ball1.xSpeed *= -0.5; // ball1 loses energy
-                  ball2.x += ball2.xSpeed; // ball2 bounces forward
-                } else if (ball1.xSpeed * ball2.xSpeed > 0 && Math.abs(ball1.xSpeed) < Math.abs(ball2.xSpeed)) { // if ball1 and ball2 move in the same direction but ball2 hits ball1
-                  ball1.xSpeed += ball2.xSpeed * 0.25; // ball2 adds energy
-                  ball2.x -= ball2.xSpeed; // ball1 bounces back
-                  ball2.xSpeed *= -0.5; // ball1 loses energy
-                  ball1.x += ball1.xSpeed; // ball2 bounces forward
-                } else {
-                  ball1.x -= ball1.xSpeed;
-                  ball1.xSpeed *= -0.5;
-                  ball2.x -= ball2.xSpeed;
-                  ball2.xSpeed *= -0.5;
-                }
-              }
-            };
-          };
-        };
-
+            }
+          }
+        }
+      
       function ballsFactory(num) {
         let n = 1;
-        let colors = ["black", "red", "blue", "orange", "yellow", "green", "indigo", "violet", "silver"]
+        let colors = ["red", "blue", "orange", "yellow", "green", "indigo", "violet", "silver"]
         while (num > 0 && ranges.length > 0) { // repeat the cycle as many times as you many balls you want
           let name = ballNameGenerator(n);
           balls[name] = new Ball(name, choice(colors)); // add a new Ball class instance with a new name
@@ -170,7 +188,7 @@
           let name = "ball" + i.toString();
           balls[name].move();
         }
-        checkBallsCollision(); 
+       //checkBallsCollision(); 
       }, ms);        
     </script>
   </body>
