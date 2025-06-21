@@ -11,7 +11,7 @@
       const canvas = document.querySelector("canvas");
       const ctx = canvas.getContext("2d");
 
-      const ms = 100; 
+      const ms = 1000; 
       const frictionLoss = 1 - 0.2 / (1000 / ms); 
       const r = 100;
 
@@ -42,8 +42,8 @@
           this.range = choice(ranges)
           this.x = getRandomInt(this.range[0], this.range[1]); 
           this.y = canvas.height - getRandomInt(this.r, canvas.height - this.r); 
-          this.xSpeed = 50 // getRandomInt(-10, 10);
-          this.ySpeed = 25 // getRandomInt(-10, 10);
+          this.xSpeed = 1 // getRandomInt(-10, 10);
+          this.ySpeed = 0 // getRandomInt(-10, 10);
           this.moving = true;
           // this.direction = ?
           this.points = this._circlePoints();
@@ -60,23 +60,20 @@
           ctx.fill(); 
           // draw the circle points on the ball
           this.points = this._circlePoints(); // update points
-          let colors = ["red", "green", "blue", "orange", "yellow", "indigo", "violet", "silver"]
-          colors.reverse();
           for (let i = 0; i < this.points.length; i++) {
-            ctx.fillStyle = colors[i];
+            ctx.fillStyle = "green";
             ctx.beginPath();
             let [pointX, pointY] = this.points[i];
             ctx.arc(pointX, pointY, 5, 0, Math.PI * 2)
             ctx.fill();
           }
           // draw direction vector
-          ctx.strokeStyle = "white";
+          ctx.strokeStyle = "red";
           ctx.beginPath();
           ctx.moveTo(this.x, this.y);
           ctx.lineTo(this.vectorX, this.vectorY);
           ctx.stroke();
         }
-
 
         move() {
           if (this.moving === true) {
@@ -116,13 +113,20 @@
 
         _circlePoints() {
           let points = [];
-          let divisors = [1, 1.33, 2, 4, 180, -4, -2, -1.33];
-          for (let i = 0; i < divisors.length; i++) {
-            let k = divisors[i]
-            let sin = Math.sin(Math.PI / k);
-            let cos = Math.cos(Math.PI / k);
-            let x = Math.floor(this.x - this.r * sin);
-            let y = Math.floor(this.y - this.r * cos);
+          const base = 6.28;
+          const numPoints = 10;
+          const minExponent = 0; // log614(1) = 0
+          const maxExponent = 1; // log614(6.28) = 1
+          const step = (maxExponent - minExponent) / (numPoints - 1);
+          console.log("step:", step);
+          for (let i = 0; i < numPoints; i++) {
+            const linearValue = minExponent + i * step; 
+            const logValue = base ** linearValue;
+            console.log("i:", i, "linearValue:", linearValue, "logValue:", logValue);
+            const sin = Math.sin(2 * Math.PI / logValue);
+            const cos = Math.cos(2 * Math.PI / logValue);
+            const x = Math.floor(this.x - this.r * sin);
+            const y = Math.floor(this.y - this.r * cos);
             points.unshift([x, y]); // add the x;y pair to the points array
           }
           return points; 
@@ -216,7 +220,7 @@
         let colors = ["red", "blue", "orange", "yellow", "green", "indigo", "violet", "silver"]
         while (num > 0 && ranges.length > 0) { // repeat the cycle as many times as you many balls you want
           let name = ballNameGenerator(n);
-          balls[name] = new Ball(name, choice("black")); // add a new Ball class instance with a new name
+          balls[name] = new Ball(name, choice(colors)); // add a new Ball class instance with a new name
           n++;
           num--;
         } 
