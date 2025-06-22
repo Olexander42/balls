@@ -17,7 +17,6 @@
 
       let g = 0; // 0 - gravity off (side view), 1 - gravity on(top view)
 
-      const corePoints = [0, 2, 4, 6]
       let balls = {};
       let numOfBalls;
       let ranges = [[r, canvas.width - r]]; 
@@ -113,18 +112,12 @@
 
         _circlePoints() {
           let points = [];
-          const base = 6.28;
-          const numPoints = 10;
-          const minExponent = 0; // log614(1) = 0
-          const maxExponent = 1; // log614(6.28) = 1
-          const step = (maxExponent - minExponent) / (numPoints - 1);
-          console.log("step:", step);
-          for (let i = 0; i < numPoints; i++) {
-            const linearValue = minExponent + i * step; 
-            const logValue = base ** linearValue;
-            console.log("i:", i, "linearValue:", linearValue, "logValue:", logValue);
-            const sin = Math.sin(2 * Math.PI / logValue);
-            const cos = Math.cos(2 * Math.PI / logValue);
+          let steps = 100; // the number of circle points
+          let step = 2 * Math.PI / steps; // create equal gap
+          for (let i = 0; i < steps; i++) {
+            let rad = step * i; // radians to each circle point
+            const sin = Math.sin(rad);
+            const cos = Math.cos(rad); 
             const x = Math.floor(this.x - this.r * sin);
             const y = Math.floor(this.y - this.r * cos);
             points.unshift([x, y]); // add the x;y pair to the points array
