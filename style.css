@@ -1,0 +1,16 @@
+body {
+  display: flex;
+  justify-content: center;
+}
+
+#container {
+  position: relative;
+}
+
+canvas {
+  border: solid 1px gray;
+}
+
+.data {
+  position: absolute;
+}
