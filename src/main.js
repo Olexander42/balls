@@ -1,4 +1,4 @@
-import { ballsFactory, drawSlope } from "./helpers.js";
+import { ballsFactory } from "./helpers.js";
 import { balls, mainCanvas, mainCtx, FPS } from "./constants.js";
 
 ballsFactory(1);
@@ -26,11 +26,7 @@ document.querySelector('html').addEventListener('keydown', (e) => {
     ball.velocity.x += 1;
   }
 
-  //mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
   ball._drawDirectionVector();
-  drawSlope();
-
 })
 
 /*

@@ -1,5 +1,5 @@
 import { choose, getRandomInt, getDistance, roundTo } from "./utils.js";
-import { availableSpaces, mainCanvas, COLLISION_LOSS, mainCtx, FRICTION_LOSS, G, MAX_SPEED, R, SIDE_VIEW, slopeCoords } from "./constants.js";
+import { availableSpaces, mainCanvas, COLLISION_LOSS, mainCtx, FRICTION_LOSS, G, MAX_SPEED, R, SIDE_VIEW, borderCoords } from "./constants.js";
 
 
 class Ball {
@@ -8,7 +8,7 @@ class Ball {
     this.color = color;
 
     this.center = { x: 250, y: 300 };
-    this.velocity = { x: 25, y: 25 };
+    this.velocity = { x: 10, y: 25 };
 
     //this._spawn();
     this._createDataCanvas();
@@ -32,28 +32,25 @@ class Ball {
 
       this.dataCanvas.style.left = `${this.center.x - R / 2}px`;
       this.dataCanvas.style.top = `${this.center.y - R / 2}px`;
-    
-      if (this._checkBorderCollision() !== false) {
-        this._updateData();
 
-        this.center.x = this.directionEndpoint.x;
-        this.center.y = this.directionEndpoint.y;
-      }
-
-      this._checkSlopeCollision();
+      this._checkCollision();
 
       this._updateData(); 
 
       //if (SIDE_VIEW) this._checkRolling(); 
       //if (Math.abs(this.velocity.y) < 0.1 || Math.abs(this.velocity.y) < 0.1 ) this.IsMoving = false; 
     } 
+
     this._draw(); 
   }
-
+  
+  _circlePoints() {
+    
+  }
   _findSteps() {
     this.step = {};
-    this.step.x = this.velocity.x / Math.abs((this.velocity.x + this.velocity.y)); // .abs to preserve negative values
-    this.step.y = this.velocity.y / Math.abs((this.velocity.x + this.velocity.y));
+    this.step.x = this.velocity.x / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)); // .abs to preserve negative values AND to avoid zero values
+    this.step.y = this.velocity.y / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y));
   }
 
   _draw() {
@@ -143,26 +140,11 @@ class Ball {
     mainCtx.stroke();
   }
 
-  _checkBorderCollision() { // replace border with array of points + add slope to borders
-    if (this.directionEndpoint.y >= mainCanvas.height || this.directionEndpoint.y <= 0) {
-      this.velocity.y *= -1; // bounce
-      console.log("velocity.y:", this.velocity.y);
-    } 
-
-    else if (this.directionEndpoint.x >= mainCanvas.width || this.directionEndpoint.x <= 0) {
-      this.velocity.x *= -1;
-    }
-
-    else {
-      return false;
-    }
-  };
-
-  _checkSlopeCollision() {
+  _checkCollision() {
     const collisionPoints = [];
 
-    for (let i = 0; i < slopeCoords.length; i++) {
-      const point = slopeCoords[i];
+    for (let i = 0; i < borderCoords.length; i++) {
+      const point = borderCoords[i];
       const distanceToPoint = getDistance(this.center.x, this.center.y, point.x, point.y);
 
       // at some point ball goes from zero collision points to more than one
@@ -185,7 +167,7 @@ class Ball {
       this.velocity.y = this.directionMagnitude * Math.sin(newDirAngle);
 
       this._findSteps();
-      console.table(this.step);
+  
       this.center.x = roundTo(this.center.x + this.step.x, 1);
       this.center.y = roundTo(this.center.y + this.step.y, 1);
 

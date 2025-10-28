@@ -1,5 +1,5 @@
 import Ball from "./Ball.js";
-import { availableSpaces, balls, mainCanvas, mainCtx, R, slopeCoords } from "./constants.js";
+import { availableSpaces, balls, mainCanvas, mainCtx, R, borderCoords } from "./constants.js";
 import { choose, getDistance } from "./utils.js";
 
 
@@ -46,17 +46,7 @@ function ballsFactory(num) {
 }
 
 
-function drawSlope() {
-    for (let i = 1; i < slopeCoords.length; i++) {
-      mainCtx.strokeStyle = "blue";
-      mainCtx.lineWidth = 1;
-      mainCtx.beginPath();
-      mainCtx.moveTo(slopeCoords[i-1].x, slopeCoords[i-1].y);
-      mainCtx.lineTo(slopeCoords[i].x, slopeCoords[i].y);
-      mainCtx.stroke();
-    }
 
-}
  
 
-export { findCollisionPoint, ballsFactory, drawSlope }
+export { findCollisionPoint, ballsFactory }

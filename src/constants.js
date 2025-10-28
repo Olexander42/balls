@@ -14,19 +14,45 @@ const MAX_SPEED = 10;
 const balls = {};
 const availableSpaces = [{ xMin: R, xMax: mainCanvas.width - R }]; 
 
-let slopeCoords = () => {
-  const slopeCoords = [];
+let borderCoords = () => {
+  const borderCoords = [];
 
-  for (let i = 0; i <= mainCanvas.width; i++) {
-    const y = mainCanvas.height - Math.round(i * (mainCanvas.height / mainCanvas.width));
-    const x = mainCanvas.width / 2 + i;
-    slopeCoords.push({x, y});
+  // left border
+  for (let i = 0; i <= mainCanvas.height; i++) {
+    const y = i;
+    const x = 0;
+
+    borderCoords.push({x, y});
   }
 
-  return slopeCoords;
+ // top border 
+  for (let i = 0; i <= mainCanvas.width; i++) {
+    const y = 0;
+    const x = i;
+
+    borderCoords.push({x, y});
+  }
+
+  // right border
+  for (let i = 0; i <= mainCanvas.height; i++) {
+    const y = i;
+    const x = mainCanvas.width;
+
+    borderCoords.push({x, y});
+  }
+
+  // bottom corner
+  for (let i = 0; i <= mainCanvas.width; i++) {
+    const y = mainCanvas.height;
+    const x = i;
+
+    borderCoords.push({x, y});
+  }
+
+  return borderCoords;
 };
 
-slopeCoords = slopeCoords();
+borderCoords = borderCoords();
 
 
-export { mainCanvas, mainCtx, SIDE_VIEW, G, FPS, FRICTION_LOSS, COLLISION_LOSS, R, MAX_SPEED, balls, availableSpaces, slopeCoords }
+export { mainCanvas, mainCtx, SIDE_VIEW, G, FPS, FRICTION_LOSS, COLLISION_LOSS, R, MAX_SPEED, balls, availableSpaces, borderCoords }
