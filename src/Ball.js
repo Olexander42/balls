@@ -1,5 +1,5 @@
 import { choose, getRandomInt, getDistance, roundTo } from "./utils.js";
-import { availableSpaces, mainCanvas, COLLISION_LOSS, mainCtx, FRICTION_LOSS, G, MAX_SPEED, R, SIDE_VIEW } from "./constants.js";
+import { availableSpaces, mainCanvas, COLLISION_LOSS, mainCtx, FRICTION_LOSS, G, MAX_SPEED, R, SIDE_VIEW, slopeCoords } from "./constants.js";
 
 
 class Ball {
@@ -7,16 +7,16 @@ class Ball {
     this.name = name;
     this.color = color;
 
-    this.center = { x: 100, y: 300 };
+    this.center = { x: 250, y: 300 };
+    this.velocity = { x: 25, y: 25 };
 
-    this.comp = { x: 5, y: 50 };
-    this.momentum = 100; //getDistance(this.center.x, this.center.y, this.center.x + this.comp.x, this.center.y + this.comp.y);
-
-    this.IsMoving = true;
     //this._spawn();
     this._createDataCanvas();
     this._draw()
     this._updateData();
+    this._findSteps()
+
+    this.IsMoving = true;
   }
 
 
@@ -24,27 +24,41 @@ class Ball {
     mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
     if (this.IsMoving === true) {
-      //this.comp.x *= FRICTION_LOSS;
-      //SIDE_VIEW ? this.comp.y += G : this.comp.y *= FRICTION_LOSS;
-   
-      this.center.x += this.comp.x * 0.1;
-      this.center.y += this.comp.y * 0.1;
+      //this.velocity.x *= FRICTION_LOSS;
+      //SIDE_VIEW ? this.velocity.y += G : this.velocity.y *= FRICTION_LOSS;
+
+      this.center.x = roundTo(this.center.x + this.step.x, 1);
+      this.center.y = roundTo(this.center.y + this.step.y, 1);
 
       this.dataCanvas.style.left = `${this.center.x - R / 2}px`;
       this.dataCanvas.style.top = `${this.center.y - R / 2}px`;
+    
+      if (this._checkBorderCollision() !== false) {
+        this._updateData();
+
+        this.center.x = this.directionEndpoint.x;
+        this.center.y = this.directionEndpoint.y;
+      }
+
+      this._checkSlopeCollision();
+
       this._updateData(); 
-      
-      this._checkBorderCollision();
 
       //if (SIDE_VIEW) this._checkRolling(); 
-      //if (Math.abs(this.comp.y) < 0.1 || Math.abs(this.comp.y) < 0.1 ) this.IsMoving = false; 
+      //if (Math.abs(this.velocity.y) < 0.1 || Math.abs(this.velocity.y) < 0.1 ) this.IsMoving = false; 
     } 
     this._draw(); 
   }
 
+  _findSteps() {
+    this.step = {};
+    this.step.x = this.velocity.x / Math.abs((this.velocity.x + this.velocity.y)); // .abs to preserve negative values
+    this.step.y = this.velocity.y / Math.abs((this.velocity.x + this.velocity.y));
+  }
+
   _draw() {
-    //this._drawBall();
     this._drawDirectionVector();
+    this._drawBall();
   }
 
   _spawn() {
@@ -62,7 +76,7 @@ class Ball {
     this.dataCanvas.classList.add("data");
 
     this.dataCtx = this.dataCanvas.getContext('2d'); 
-    this.dataCtx.fillStyle = 'black';
+    this.dataCtx.fillStyle = 'white';
     this.dataCtx.font = '10px Monospace'; 
     this.dataCtx.textAlign = 'left';
     this.dataCtx.textBaseline = 'bottom'; 
@@ -73,12 +87,13 @@ class Ball {
   _updateData() {
     this.dataCtx.clearRect(0, 0, this.dataCanvas.width, this.dataCanvas.height);
 
-    this.angle = Math.atan2(this.vector.y - this.center.y, this.vector.x - this.center.x);
+    this.directionAngle = Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x);
     
-    this.dataCtx.fillText(`angle: ${roundTo(this.angle, 3)}rad`, 0, 10);
-    this.dataCtx.fillText(`V: ${roundTo(this.momentum, 3)}`, 0, 20);
-    this.dataCtx.fillText(`Vx: ${roundTo(this.comp.x, 3)}`, 0, 30);
-    this.dataCtx.fillText(`Vy: ${roundTo(this.comp.y, 3)}`, 0, 40);
+    this.dataCtx.fillText(`angle: ${roundTo(this.directionAngle, 3)}rad`, 0, 10);
+    this.dataCtx.fillText(`V: ${roundTo(this.directionMagnitude, 3)}`, 0, 20);
+    this.dataCtx.fillText(`Vx: ${roundTo(this.velocity.x, 3)}`, 0, 30);
+    this.dataCtx.fillText(`Vy: ${roundTo(this.velocity.y, 3)}`, 0, 40);
+    this.dataCtx.fillText(`tan: ${roundTo(Math.tan(this.directionAngle), 3)}`, 0, 50);
   }
 
   _updateAvailableSpaces() {
@@ -109,64 +124,85 @@ class Ball {
   _drawBall() {
     mainCtx.fillStyle = "black" // this.color;
     mainCtx.beginPath();
-    mainCtx.arc(this.center.x, this.center.y, this.momentum, 0, Math.PI * 2);
+    mainCtx.arc(this.center.x, this.center.y, R, 0, Math.PI * 2);
     mainCtx.fill(); 
   }
 
+  _updateDirectionEndpoint() {
+    this.directionEndpoint = { x: this.center.x + this.velocity.x, y: this.center.y + this.velocity.y};
+    this.directionMagnitude = getDistance(this.center.x, this.center.y, this.directionEndpoint.x, this.directionEndpoint.y);
+  }
+
   _drawDirectionVector() {
-    //this._updateDirectionVector();
-    this.vector = { x: this.center.x + this.comp.x, y: this.center.y + this.comp.y };
+    this._updateDirectionEndpoint();
 
     mainCtx.strokeStyle = "red";
     mainCtx.beginPath();
     mainCtx.moveTo(this.center.x, this.center.y);
-    mainCtx.lineTo(this.vector.x, this.vector.y);
+    mainCtx.lineTo(this.directionEndpoint.x, this.directionEndpoint.y);
     mainCtx.stroke();
   }
 
-
-/*
-  _updateDirectionVector() {
-    this.vector.x = this.center.x;
-    this.vector.y = this.center.y;
-
-    let vectorLength = 0;
-
-    while (true) {
-      this.vector.x += this.comp.x * 0.01;
-      this.vector.y += this.comp.y * 0.01;
-
-      vectorLength = getDistance(this.center.x, this.center.y, this.vector.x, this.vector.y);
-      console.log(vectorLength);
-      if (vectorLength >= R) {
-        break;
-      }
-    }
-  }
-*/
-
-  _checkBorderCollision() {
-    if (this.vector.y >= mainCanvas.height || this.vector.y <= 0) {
-      this.comp.y -= 2 * this.comp.y;
+  _checkBorderCollision() { // replace border with array of points + add slope to borders
+    if (this.directionEndpoint.y >= mainCanvas.height || this.directionEndpoint.y <= 0) {
+      this.velocity.y *= -1; // bounce
+      console.log("velocity.y:", this.velocity.y);
     } 
 
-    else if (this.vector.x >= mainCanvas.width || this.vector.x <= 0) {
-      this.comp.x -= 2 * this.comp.x
+    else if (this.directionEndpoint.x >= mainCanvas.width || this.directionEndpoint.x <= 0) {
+      this.velocity.x *= -1;
     }
 
-    this._updateData();
-
-    this.center.x = this.vector.x;
-    this.center.y = this.vector.y;
-
-    this._drawDirectionVector();
+    else {
+      return false;
+    }
   };
 
+  _checkSlopeCollision() {
+    const collisionPoints = [];
+
+    for (let i = 0; i < slopeCoords.length; i++) {
+      const point = slopeCoords[i];
+      const distanceToPoint = getDistance(this.center.x, this.center.y, point.x, point.y);
+
+      // at some point ball goes from zero collision points to more than one
+      if (distanceToPoint <= R) { 
+        collisionPoints.push(point); 
+      }
+    }
+
+    if (collisionPoints.length > 1) {
+      // relevant collision point is exactly in the middle
+      const middlePoint = {};
+      middlePoint.x = roundTo((collisionPoints[0].x + collisionPoints[collisionPoints.length - 1].x) / 2, 1);
+      middlePoint.y = roundTo((collisionPoints[0].y + collisionPoints[collisionPoints.length - 1].y) / 2, 1);
+
+      const collAngle = roundTo(Math.atan2(middlePoint.y - this.center.y, middlePoint.x - this.center.x), 3);
+      const relCollAngle = collAngle - this.directionAngle;
+      const newDirAngle = collAngle + relCollAngle - Math.PI;
+
+      this.velocity.x = this.directionMagnitude * Math.cos(newDirAngle);
+      this.velocity.y = this.directionMagnitude * Math.sin(newDirAngle);
+
+      this._findSteps();
+      console.table(this.step);
+      this.center.x = roundTo(this.center.x + this.step.x, 1);
+      this.center.y = roundTo(this.center.y + this.step.y, 1);
+
+      /*
+      mainCtx.fillStyle = 'red';
+      mainCtx.beginPath();
+      mainCtx.arc(middlePoint.x, middlePoint.y, 2, 0, Math.PI * 2);
+      mainCtx.fill(); 
+      */
+    }
+  }
+
   _checkRolling() { // ball rolls on the ground | for side view only!
-    if (this.center.y >= mainCanvas.height - R && Math.abs(this.comp.y) <= this.g) { 
+    if (this.center.y >= mainCanvas.height - R && Math.abs(this.velocity.y) <= this.g) { 
       this.g = 0;
-      this.comp.y = 0;
-      this.comp.y *= FRICTION_LOSS; 
+      this.velocity.y = 0;
+      this.velocity.y *= FRICTION_LOSS; 
     }
   }
 }

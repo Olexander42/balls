@@ -1,4 +1,4 @@
-import { ballsFactory } from "./helpers.js";
+import { ballsFactory, drawSlope } from "./helpers.js";
 import { balls, mainCanvas, mainCtx, FPS } from "./constants.js";
 
 ballsFactory(1);
@@ -11,24 +11,25 @@ document.querySelector('html').addEventListener('keydown', (e) => {
   }
 
   else if (e.code === 'ArrowUp') {
-    ball.angle += 0.01;
+    ball.directionAngle += 0.01;
   }
 
   else if (e.code === 'ArrowDown') {
-    ball.angle -= 0.01;
+    ball.directionAngle -= 0.01;
   }
 
   else if (e.code === 'ArrowLeft') {
-    ball.comp.x -= 1;
+    ball.velocity.x -= 1;
   }
 
   else if (e.code === 'ArrowRight') {
-    ball.comp.x += 1;
+    ball.velocity.x += 1;
   }
 
-  mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+  //mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+
   ball._drawDirectionVector();
-  ball._updateData();
+  drawSlope();
 
 })
 

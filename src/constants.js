@@ -14,4 +14,19 @@ const MAX_SPEED = 10;
 const balls = {};
 const availableSpaces = [{ xMin: R, xMax: mainCanvas.width - R }]; 
 
-export { mainCanvas, mainCtx, SIDE_VIEW, G, FPS, FRICTION_LOSS, COLLISION_LOSS, R, MAX_SPEED, balls, availableSpaces }
+let slopeCoords = () => {
+  const slopeCoords = [];
+
+  for (let i = 0; i <= mainCanvas.width; i++) {
+    const y = mainCanvas.height - Math.round(i * (mainCanvas.height / mainCanvas.width));
+    const x = mainCanvas.width / 2 + i;
+    slopeCoords.push({x, y});
+  }
+
+  return slopeCoords;
+};
+
+slopeCoords = slopeCoords();
+
+
+export { mainCanvas, mainCtx, SIDE_VIEW, G, FPS, FRICTION_LOSS, COLLISION_LOSS, R, MAX_SPEED, balls, availableSpaces, slopeCoords }
