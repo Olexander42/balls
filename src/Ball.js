@@ -1,5 +1,5 @@
 import { choose, getRandomInt, getDistance, roundTo } from "./utils.js";
-import { availableSpaces, mainCanvas, COLLISION_LOSS, mainCtx, FRICTION_LOSS, G, MAX_SPEED, R, SIDE_VIEW, borderCoords } from "./constants.js";
+import { availableSpaces, balls, mainCanvas, COLLISION_LOSS, mainCtx, FRICTION_LOSS, G, MAX_SPEED, R, SIDE_VIEW, borderCoords } from "./constants.js";
 
 
 class Ball {
@@ -7,33 +7,33 @@ class Ball {
     this.name = name;
     this.color = color;
 
-    this.center = { x: 250, y: 300 };
-    this.velocity = { x: 10, y: 25 };
+    this.center = {};
+    this.velocity = { x: 25, y: 3 };
 
-    //this._spawn();
+    this._spawn();
     this._createDataCanvas();
     this._draw()
     this._updateData();
     this._findSteps()
+    this._updateCirclePoints()
 
     this.IsMoving = true;
   }
 
 
   move() {
-    mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
     if (this.IsMoving === true) {
       //this.velocity.x *= FRICTION_LOSS;
       //SIDE_VIEW ? this.velocity.y += G : this.velocity.y *= FRICTION_LOSS;
 
-      this.center.x = roundTo(this.center.x + this.step.x, 1);
-      this.center.y = roundTo(this.center.y + this.step.y, 1);
+      this.center.x = roundTo(this.center.x + this.step.x, 2);
+      this.center.y = roundTo(this.center.y + this.step.y, 2);
 
       this.dataCanvas.style.left = `${this.center.x - R / 2}px`;
       this.dataCanvas.style.top = `${this.center.y - R / 2}px`;
 
-      this._checkCollision();
+      this._checkBorderCollision();
+      this._checkBallCollision();
 
       this._updateData(); 
 
@@ -42,11 +42,24 @@ class Ball {
     } 
 
     this._draw(); 
+    this._updateCirclePoints();
   }
   
-  _circlePoints() {
-    
+  _updateCirclePoints() {
+    const ballCircumference =  2 * Math.PI * R;
+    const angleStep = 2 * Math.PI / ballCircumference; // angle step between each pixel
+    this.circlePoints = [];
+
+    let angle = 0;
+    while (angle <= Math.PI * 2) {
+      const x = roundTo(this.center.x + R * Math.cos(angle), 2);
+      const y = roundTo(this.center.y + R * Math.sin(angle), 2);
+
+      this.circlePoints.push({ x, y });
+      angle += angleStep;
+    }
   }
+
   _findSteps() {
     this.step = {};
     this.step.x = this.velocity.x / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)); // .abs to preserve negative values AND to avoid zero values
@@ -60,8 +73,8 @@ class Ball {
 
   _spawn() {
     const availableSpace = choose(availableSpaces);
-    //this.center.x = getRandomInt(availableSpace.xMin, availableSpace.xMax); 
-    //this.center.y = mainCanvas.height - getRandomInt(R, mainCanvas.height - R); 
+    this.center.x = getRandomInt(availableSpace.xMin, availableSpace.xMax); 
+    this.center.y = mainCanvas.height - getRandomInt(R, mainCanvas.height - R); 
 
     this._updateAvailableSpaces();
   }
@@ -84,13 +97,13 @@ class Ball {
   _updateData() {
     this.dataCtx.clearRect(0, 0, this.dataCanvas.width, this.dataCanvas.height);
 
-    this.directionAngle = Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x);
+    this.directionAngle = roundTo(Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x), 2);
     
-    this.dataCtx.fillText(`angle: ${roundTo(this.directionAngle, 3)}rad`, 0, 10);
-    this.dataCtx.fillText(`V: ${roundTo(this.directionMagnitude, 3)}`, 0, 20);
-    this.dataCtx.fillText(`Vx: ${roundTo(this.velocity.x, 3)}`, 0, 30);
-    this.dataCtx.fillText(`Vy: ${roundTo(this.velocity.y, 3)}`, 0, 40);
-    this.dataCtx.fillText(`tan: ${roundTo(Math.tan(this.directionAngle), 3)}`, 0, 50);
+    this.dataCtx.fillText(`angle: ${roundTo(this.directionAngle, 2)}rad`, 0, 10);
+    this.dataCtx.fillText(`V: ${roundTo(this.directionMagnitude, 2)}`, 0, 20);
+    this.dataCtx.fillText(`Vx: ${roundTo(this.velocity.x, 2)}`, 0, 30);
+    this.dataCtx.fillText(`Vy: ${roundTo(this.velocity.y, 2)}`, 0, 40);
+    this.dataCtx.fillText(`tan: ${roundTo(Math.tan(this.directionAngle), 2)}`, 0, 50);
   }
 
   _updateAvailableSpaces() {
@@ -119,7 +132,7 @@ class Ball {
   }    
 
   _drawBall() {
-    mainCtx.fillStyle = "black" // this.color;
+    mainCtx.fillStyle = this.color;
     mainCtx.beginPath();
     mainCtx.arc(this.center.x, this.center.y, R, 0, Math.PI * 2);
     mainCtx.fill(); 
@@ -140,7 +153,7 @@ class Ball {
     mainCtx.stroke();
   }
 
-  _checkCollision() {
+  _checkBorderCollision() {
     const collisionPoints = [];
 
     for (let i = 0; i < borderCoords.length; i++) {
@@ -156,20 +169,15 @@ class Ball {
     if (collisionPoints.length > 1) {
       // relevant collision point is exactly in the middle
       const middlePoint = {};
-      middlePoint.x = roundTo((collisionPoints[0].x + collisionPoints[collisionPoints.length - 1].x) / 2, 1);
-      middlePoint.y = roundTo((collisionPoints[0].y + collisionPoints[collisionPoints.length - 1].y) / 2, 1);
+      middlePoint.x = roundTo((collisionPoints[0].x + collisionPoints[collisionPoints.length - 1].x) / 2, 2);
+      middlePoint.y = roundTo((collisionPoints[0].y + collisionPoints[collisionPoints.length - 1].y) / 2, 2);
 
-      const collAngle = roundTo(Math.atan2(middlePoint.y - this.center.y, middlePoint.x - this.center.x), 3);
-      const relCollAngle = collAngle - this.directionAngle;
-      const newDirAngle = collAngle + relCollAngle - Math.PI;
-
-      this.velocity.x = this.directionMagnitude * Math.cos(newDirAngle);
-      this.velocity.y = this.directionMagnitude * Math.sin(newDirAngle);
+      this._calculateCollisionAngle(middlePoint);
 
       this._findSteps();
-  
-      this.center.x = roundTo(this.center.x + this.step.x, 1);
-      this.center.y = roundTo(this.center.y + this.step.y, 1);
+
+      this.center.x = roundTo(this.center.x + this.step.x, 2);
+      this.center.y = roundTo(this.center.y + this.step.y, 2);
 
       /*
       mainCtx.fillStyle = 'red';
@@ -177,6 +185,45 @@ class Ball {
       mainCtx.arc(middlePoint.x, middlePoint.y, 2, 0, Math.PI * 2);
       mainCtx.fill(); 
       */
+    }
+  }
+
+  _checkBallCollision() {
+    this._getOtherCirclePoints();
+
+    for (let i = 0; i < this.otherCirclePoints.length; i++) {
+      const circlePoint = this.otherCirclePoints[i];
+      const distanceToPoint = getDistance(this.center.x, this.center.y, circlePoint.x, circlePoint.y);
+
+
+     if (distanceToPoint <= R) { 
+        this._calculateCollisionAngle(circlePoint);
+
+        this._findSteps();
+
+        this.center.x = roundTo(this.center.x + this.step.x, 2);
+        this.center.y = roundTo(this.center.y + this.step.y, 2);
+      }
+    }
+  }
+
+  _calculateCollisionAngle(collisionPoint) {
+    const collAngle = roundTo(Math.atan2(collisionPoint.y - this.center.y, collisionPoint.x - this.center.x), 3);
+    const relCollAngle = collAngle - this.directionAngle;
+    const newDirAngle = collAngle + relCollAngle - Math.PI;
+
+    this.velocity.x = this.directionMagnitude * Math.cos(newDirAngle);
+    this.velocity.y = this.directionMagnitude * Math.sin(newDirAngle);
+  }
+
+  _getOtherCirclePoints() {
+    this.otherCirclePoints = [];
+
+    for (let i = 0; i < balls.length; i++) {
+      if (balls[i].name !== this.name) {
+        const otherBallCirclePoints = balls[i].circlePoints;
+        this.otherCirclePoints.push(...otherBallCirclePoints);
+      }
     }
   }
 

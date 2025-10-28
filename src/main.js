@@ -1,13 +1,15 @@
 import { ballsFactory } from "./helpers.js";
 import { balls, mainCanvas, mainCtx, FPS } from "./constants.js";
 
-ballsFactory(1);
+ballsFactory(2);
 
-const ball = balls.ball1;
-
+/*
 document.querySelector('html').addEventListener('keydown', (e) => {
+  mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+
   if (e.code === 'Space') {
     ball.move();
+    ball2.move();
   }
 
   else if (e.code === 'ArrowUp') {
@@ -27,16 +29,16 @@ document.querySelector('html').addEventListener('keydown', (e) => {
   }
 
   ball._drawDirectionVector();
-})
+  ball2._draw();
+}
+*/
 
-/*
+
 setInterval(() => { // rewrite in RAF, but first make it work as it is
   mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-  for (let i = 1; i <= Object.keys(balls).length; i++) {
-    const name = `ball${i.toString()}`;
-    balls[name].move();
+  for (let i = 1; i <= balls.length; i++) {
+    balls[i].move();
   }
- //checkBallsCollision(); 
 }, (1000 / FPS));   
-*/
+
  

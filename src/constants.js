@@ -11,7 +11,7 @@ const COLLISION_LOSS = 0.5;
 const R = 100;
 const MAX_SPEED = 10;
 
-const balls = {};
+const balls = [];
 const availableSpaces = [{ xMin: R, xMax: mainCanvas.width - R }]; 
 
 let borderCoords = () => {
