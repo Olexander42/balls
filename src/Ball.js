@@ -12,7 +12,6 @@ class Ball {
     this.center = center;
     this.velocity = velocity;
 
-    //this._spawn();
     this._updateDirectionEndpoint();
     this._updateSteps();
     this.action();
@@ -106,7 +105,7 @@ class Ball {
       this._updateDirectionEndpoint();
 
       //bounce
-      //this.move();
+      this.move();
  
     }
   }
@@ -117,40 +116,7 @@ class Ball {
 
     this.velocity.x = roundTo(this.linearMomentum * Math.cos(newDirAngle), 4);
     this.velocity.y = roundTo(this.linearMomentum * Math.sin(newDirAngle), 4);
-  }
-
-  _spawn() {
-    const availableSpace = choose(availableSpaces);
-    this.center.x = getRandomInt(availableSpace.xMin, availableSpace.xMax); 
-    this.center.y = mainCanvas.height - getRandomInt(R, mainCanvas.height - R); 
-
-    this._updateAvailableSpaces();
-  }
-
-  _updateAvailableSpaces() {
-    for (let i = 0; i < availableSpaces.length; i++) {
-      const availableSpace = availableSpaces[i];
-
-      if (this.center.x >= availableSpace.xMin && this.center.x <= availableSpace.xMax) { // find the space the ball is currently in
-        if (this.center.x - availableSpace.xMin < 2 * R && availableSpace.xMax - this.center.x < 3 * R) { // there's no room for another ball
-          availableSpaces.splice(i, 1); 
-
-        } else if (this.center.x - availableSpace.xMin < 2 * R) { // there's no room to the left
-          availableSpaces[i].xMin = this.center.x + 2 * R;  // cut off the space to the left
-        } else if (availableSpace.xMax - this.center.x < 2 * R) { // there's no room to the right
-          availableSpaces[i].xMax = this.center.x - 2 * R; // cut off the space to the right
-
-        } else { // there's room for another ball on both sides
-          const newAvailableSpaceLeft = { xMin: availableSpace.xMin, xMax: this.center.x - 2 * R }; 
-          const newAvailableSpaceRight = { xMin: this.center.x + 2 * R, xMax: availableSpace.xMax };
-
-          availableSpaces.splice(i, 1, newAvailableSpaceLeft, newAvailableSpaceRight); // replace the current space with two new spaces
-        }
-      }
-
-      break;
-    }
-  }    
+  }   
 }
 
 

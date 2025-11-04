@@ -5,8 +5,8 @@ import { balls, datas, mainCanvas, mainCtx, FPS } from "./constants.js";
 
 //ballsFactory(10);
 
-balls.push(new Ball("ball1", 'orange', { x:75, y:200 }, { x: 10, y: 0 }));
-//balls.push(new Ball("ball2", 'blue', { x:225, y:200 }, { x: 0, y: 0 }));
+balls.push(new Ball("ball1", 'orange', { x:75, y:350 }, { x: 10, y: -10 }));
+balls.push(new Ball("ball2", 'blue', { x:225, y:200 }, { x: 0, y: 0 }));
 //balls.push(new Ball("ball3", 'green', {x:375, y:200}, {x: -10, y: 0 }));
 //balls.push(new Ball("ball4", 'yellow', {x:400, y:100}, {x: -5, y: 10}));
 
