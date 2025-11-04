@@ -12,36 +12,52 @@ class Ball {
     this.center = center;
     this.velocity = velocity;
 
-    this._updateDirectionEndpoint();
-    
     //this._spawn();
-    this._createDataCanvas();
-    this._updateData();
+    this._updateDirectionEndpoint();
     this._updateSteps();
-    this._updateCirclePoints()
-    this._draw();
-    this.IsMoving = true;
+    this.action();
   }
 
   action() {
-    if (this.IsMoving === true) {
-      this.move()
+    this.move()
 
-      this.dataCanvas.style.left = `${this.center.x - R / 2}px`;
-      this.dataCanvas.style.top = `${this.center.y - R / 2}px`;
+    this._updateDirectionEndpoint();
+    this._checkBorderCollision();
 
-      this._updateDirectionEndpoint();
-      this._updateCirclePoints();
-      this._checkBorderCollision();
-      this._updateData();
-    } 
-
-    this._draw(); 
+    this._drawBall();
+    this._drawDirectionVector(); 
   }
 
   move() {
     this.center.x = this.center.x + this.velocity.x * 0.2;
     this.center.y = this.center.y + this.velocity.y * 0.2; 
+  }
+
+  _drawBall() {
+    mainCtx.fillStyle = this.color;
+    mainCtx.beginPath();
+    mainCtx.arc(this.center.x, this.center.y, R, 0, Math.PI * 2);
+    mainCtx.fill(); 
+  }
+
+  _updateDirectionEndpoint() {
+    this.directionEndpoint = { x: this.center.x + this.velocity.x, y: this.center.y + this.velocity.y};
+    this.linearMomentum = getDistance(this.center, this.directionEndpoint);
+    this.angle = Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x);
+  }
+
+  _drawDirectionVector() {
+    mainCtx.strokeStyle = 'black';
+    mainCtx.beginPath();
+    mainCtx.moveTo(this.center.x, this.center.y);
+    mainCtx.lineTo(this.directionEndpoint.x, this.directionEndpoint.y);
+    mainCtx.stroke();
+  }
+
+  _updateSteps() {
+    this.step = {};
+    this.step.x = roundTo(this.velocity.x / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)), 3); // .abs to preserve negative values AND to avoid zero values
+    this.step.y = roundTo(this.velocity.y / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)), 3);
   }
 
   getCollisionVelocity(collisionPoint) {
@@ -67,13 +83,6 @@ class Ball {
     this.relCollAngle = this.absCollAngle - this.angle; // we don't use dot product because then we lose information about the direction 
   }
 
-  _drawBall() {
-    mainCtx.fillStyle = this.color;
-    mainCtx.beginPath();
-    mainCtx.arc(this.center.x, this.center.y, R, 0, Math.PI * 2);
-    mainCtx.fill(); 
-  }
-  
   _checkBorderCollision() {
     const collisionPoints = [];
 
@@ -110,33 +119,6 @@ class Ball {
     this.velocity.y = roundTo(this.linearMomentum * Math.sin(newDirAngle), 4);
   }
 
-  _updateCirclePoints() {
-    this.circlePoints = [];
-
-    const ballCircumference =  2 * Math.PI * R;
-    const angleStep = 2 * Math.PI / ballCircumference / 20; // angle step between each pixel
-
-    let angle = 0;
-    while (angle <= Math.PI * 2) {
-      const x = this.center.x + R * Math.cos(angle);
-      const y = this.center.y + R * Math.sin(angle);
-
-      this.circlePoints.push({ x, y });
-      angle += angleStep;
-    }
-  }
-
-  _updateSteps() {
-    this.step = {};
-    this.step.x = roundTo(this.velocity.x / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)), 3); // .abs to preserve negative values AND to avoid zero values
-    this.step.y = roundTo(this.velocity.y / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)), 3);
-  }
-
-  _draw() {
-    this._drawBall();
-    this._drawDirectionVector();
-  }
-
   _spawn() {
     const availableSpace = choose(availableSpaces);
     this.center.x = getRandomInt(availableSpace.xMin, availableSpace.xMax); 
@@ -169,47 +151,6 @@ class Ball {
       break;
     }
   }    
-
-  _updateDirectionEndpoint() {
-    this.directionEndpoint = { x: this.center.x + this.velocity.x, y: this.center.y + this.velocity.y};
-    this.linearMomentum = getDistance(this.center, this.directionEndpoint);
-    this.angle = Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x);
-  }
-
-  _drawDirectionVector() {
-    mainCtx.strokeStyle = 'black';
-    mainCtx.beginPath();
-    mainCtx.moveTo(this.center.x, this.center.y);
-    mainCtx.lineTo(this.directionEndpoint.x, this.directionEndpoint.y);
-    mainCtx.stroke();
-  }
-
-  _createDataCanvas() {
-    this.dataCanvas = document.createElement('canvas');
-    this.dataCanvas.width = 100;
-    this.dataCanvas.height = 50;
-    this.dataCanvas.classList.add("data");
-
-    this.dataCtx = this.dataCanvas.getContext('2d'); 
-    this.dataCtx.fillStyle = 'white';
-    this.dataCtx.font = '10px Monospace'; 
-    this.dataCtx.textAlign = 'left';
-    this.dataCtx.textBaseline = 'bottom'; 
-
-    document.getElementById("container").appendChild(this.dataCanvas);
-  }
-
-  _updateData() {
-    this.dataCtx.clearRect(0, 0, this.dataCanvas.width, this.dataCanvas.height);
-
-    this.angle = roundTo(Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x), 3);
-    
-    this.dataCtx.fillText(`angle: ${roundTo(this.angle, 3)}rad`, 0, 10);
-    this.dataCtx.fillText(`V: ${roundTo(this.linearMomentum, 3)}`, 0, 20);
-    this.dataCtx.fillText(`Vx: ${roundTo(this.velocity.x, 3)}`, 0, 30);
-    this.dataCtx.fillText(`Vy: ${roundTo(this.velocity.y, 3)}`, 0, 40);
-    this.dataCtx.fillText(`tan: ${roundTo(Math.tan(this.angle), 3)}`, 0, 50);
-  }
 }
 
 

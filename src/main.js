@@ -1,13 +1,18 @@
 import Ball from "./Ball.js";
+import Data from "./Data.js";
 import { ballsFactory, checkBallsCollisions } from "./helpers.js";
-import { balls, mainCanvas, mainCtx, FPS } from "./constants.js";
+import { balls, datas, mainCanvas, mainCtx, FPS } from "./constants.js";
 
 //ballsFactory(10);
 
 balls.push(new Ball("ball1", 'orange', { x:75, y:200 }, { x: 10, y: 0 }));
-balls.push(new Ball("ball2", 'blue', { x:225, y:200 }, { x: 0, y: 0 }));
-balls.push(new Ball("ball3", 'green', {x:375, y:200}, {x: -10, y: 0 }));
+//balls.push(new Ball("ball2", 'blue', { x:225, y:200 }, { x: 0, y: 0 }));
+//balls.push(new Ball("ball3", 'green', {x:375, y:200}, {x: -10, y: 0 }));
 //balls.push(new Ball("ball4", 'yellow', {x:400, y:100}, {x: -5, y: 10}));
+
+for (let i = 0; i < balls.length; i++) {
+  datas.push(new Data(balls[i]));
+}
 
 document.querySelector('html').addEventListener('keydown', (e) => {
   mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
@@ -17,6 +22,8 @@ document.querySelector('html').addEventListener('keydown', (e) => {
     let sumVelocityY = 0;
     for (let i = 0; i < balls.length; i++) {
       balls[i].action();
+      datas[i].update();
+
       sumVelocityX += (balls[i].velocity.x);
       sumVelocityY += (balls[i].velocity.y);
     }

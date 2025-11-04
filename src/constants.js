@@ -12,6 +12,7 @@ const R = 50;
 const MAX_SPEED = 10;
 
 const balls = [];
+const datas = [];
 const availableSpaces = [{ xMin: R, xMax: mainCanvas.width - R }]; 
 
 let borderCoords = () => {
@@ -55,4 +56,4 @@ let borderCoords = () => {
 borderCoords = borderCoords();
 
 
-export { mainCanvas, mainCtx, SIDE_VIEW, G, FPS, FRICTION_LOSS, COLLISION_LOSS, R, MAX_SPEED, balls, availableSpaces, borderCoords }
+export { mainCanvas, mainCtx, SIDE_VIEW, G, FPS, FRICTION_LOSS, COLLISION_LOSS, R, MAX_SPEED, balls, datas, availableSpaces, borderCoords }

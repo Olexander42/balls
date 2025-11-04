@@ -20,18 +20,14 @@ function checkBallsCollisions() {
 
     for (let j = i + 1; j < balls.length; j++) { 
       const ball2 = balls[j];
-      const collisionPoints = checkCirclePoints(ball1, ball2);
+        
+      const distanceBetweenCenters = getDistance(ballA.center, ballB.center);
 
-      if (collisionPoints.length > 1) {
+      if (distanceBetweenCenters <= R * 2) {
         console.log(`| ${i + 1} pair |`)
-        const validCollisionPoint = findValidCollisionPoint(collisionPoints);
-
-        ball1.getCollisionVelocity(validCollisionPoint);
-        ball2.getCollisionVelocity(validCollisionPoint);
-
-        // sum up collVels.x and collVels.y
-
-        // balln.velocity.x - sumCollVels.x and balln.velocity.y - sumCollVels.y 
+ 
+        ball1.getCollisionVelocity(ball2.center);
+        ball2.getCollisionVelocity(ball1.center);
 
         const ball1preVel = ball1.velocity;
         const ball2preVel = ball2.velocity;
@@ -67,22 +63,6 @@ function checkBallsCollisions() {
         }
       }
   }
-}
-
-function checkCirclePoints(ballA, ballB) {
-  const collisionPoints = []
-  const circlePoints = ballB.circlePoints;
-
-  for (let i = 0; i < circlePoints.length; i++) {
-    const point = circlePoints[i];  
-    const distance = getDistance(ballA.center, point);
-
-    if (distance <= R) {  
-      collisionPoints.push(point)
-    }
-  }
-
-  return collisionPoints;
 }
 
 function findValidCollisionPoint(collisionPoints) {
