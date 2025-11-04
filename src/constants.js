@@ -8,7 +8,7 @@ const G = 1;
 const FPS = 1; 
 const FRICTION_LOSS = 1 - 0.2 / (1000 / FPS); 
 const COLLISION_LOSS = 0.5;
-const R = 100;
+const R = 50;
 const MAX_SPEED = 10;
 
 const balls = [];
@@ -18,7 +18,7 @@ let borderCoords = () => {
   const borderCoords = [];
 
   // left border
-  for (let i = 0; i <= mainCanvas.height; i++) {
+  for (let i = 0; i <= mainCanvas.height; i += 0.1) {
     const y = i;
     const x = 0;
 
@@ -26,7 +26,7 @@ let borderCoords = () => {
   }
 
  // top border 
-  for (let i = 0; i <= mainCanvas.width; i++) {
+  for (let i = 0; i <= mainCanvas.width; i += 0.1) {
     const y = 0;
     const x = i;
 
@@ -34,7 +34,7 @@ let borderCoords = () => {
   }
 
   // right border
-  for (let i = 0; i <= mainCanvas.height; i++) {
+  for (let i = 0; i <= mainCanvas.height; i += 0.1) {
     const y = i;
     const x = mainCanvas.width;
 
@@ -42,7 +42,7 @@ let borderCoords = () => {
   }
 
   // bottom corner
-  for (let i = 0; i <= mainCanvas.width; i++) {
+  for (let i = 0; i <= mainCanvas.width; i += 0.1) {
     const y = mainCanvas.height;
     const x = i;
 

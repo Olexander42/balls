@@ -1,3 +1,6 @@
+import { R }  from "./constants.js";
+
+
 function choose(array) {
   return array[Math.floor(Math.random() * (array.length))];
 }
@@ -14,13 +17,25 @@ function roundTo(value, decimals) {
   return Math.round(value * factor) / factor;
 }
 
-function getDistance(x1, y1, x2, y2) {
-  const a = x1 - x2; 
-  const b = y1 - y2; 
-  const c = Math.floor(Math.sqrt(a * a + b * b)); 
+function getDistance(point1, point2) {
+  const a = point1.x - point2.x; 
+  const b = point1.y - point2.y; 
+  const c = Math.sqrt(a * a + b * b); 
 
   return c;
 } 
 
+function getDotProduct(point1, point2) {
+  return (point1.x * point2.x + point1.y * point2.y);
+}
 
-export { choose, getRandomInt, roundTo, getDistance }
+function getAngleBetween(point1, point2) {
+  const dotProduct = getDotProduct(point1, point2);
+  const length1 = getDistance({ x: 0, y: 0 }, point1);
+  const length2 = getDistance({ x: 0, y: 0 }, point2);
+  const angle = Math.acos(dotProduct / (length1 * length2));
+  
+  return angle;
+}
+
+export { choose, getRandomInt, roundTo, getDistance, getAngleBetween, getDotProduct }

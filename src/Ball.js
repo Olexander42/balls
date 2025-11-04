@@ -1,74 +1,140 @@
-import { choose, getRandomInt, getDistance, roundTo } from "./utils.js";
 import { availableSpaces, balls, mainCanvas, COLLISION_LOSS, mainCtx, FRICTION_LOSS, G, MAX_SPEED, R, SIDE_VIEW, borderCoords } from "./constants.js";
+import { choose, getRandomInt, getDistance, roundTo, getAngleBetween, getDotProduct } from "./utils.js";
+import { normalizePoint, findValidCollisionPoint } from "./helpers.js";
+
 
 
 class Ball {
-  constructor(name, color) {
+  constructor(name, color, center, velocity) {
     this.name = name;
     this.color = color;
 
-    this.center = {};
-    this.velocity = { x: 25, y: 3 };
+    this.center = center;
+    this.velocity = velocity;
 
-    this._spawn();
+    this._updateDirectionEndpoint();
+    
+    //this._spawn();
     this._createDataCanvas();
-    this._draw()
     this._updateData();
-    this._findSteps()
+    this._updateSteps();
     this._updateCirclePoints()
-
+    this._draw();
     this.IsMoving = true;
   }
 
-
-  move() {
+  action() {
     if (this.IsMoving === true) {
-      //this.velocity.x *= FRICTION_LOSS;
-      //SIDE_VIEW ? this.velocity.y += G : this.velocity.y *= FRICTION_LOSS;
-
-      this.center.x = roundTo(this.center.x + this.step.x, 2);
-      this.center.y = roundTo(this.center.y + this.step.y, 2);
+      this.move()
 
       this.dataCanvas.style.left = `${this.center.x - R / 2}px`;
       this.dataCanvas.style.top = `${this.center.y - R / 2}px`;
 
+      this._updateDirectionEndpoint();
+      this._updateCirclePoints();
       this._checkBorderCollision();
-      this._checkBallCollision();
-
-      this._updateData(); 
-
-      //if (SIDE_VIEW) this._checkRolling(); 
-      //if (Math.abs(this.velocity.y) < 0.1 || Math.abs(this.velocity.y) < 0.1 ) this.IsMoving = false; 
+      this._updateData();
     } 
 
     this._draw(); 
-    this._updateCirclePoints();
+  }
+
+  move() {
+    this.center.x = this.center.x + this.velocity.x * 0.2;
+    this.center.y = this.center.y + this.velocity.y * 0.2; 
+  }
+
+  getCollisionVelocity(collisionPoint) {
+    this.collVel = {x: 0, y: 0};
+
+    const dotProduct = getDotProduct(this.velocity, normalizePoint(collisionPoint, this));
+    console.log(this.name, "dotProduct:", dotProduct);
+    if (dotProduct > 0) {
+      this._getCollisionAngles(collisionPoint);
+      this._updateDirectionEndpoint();
+      this.collLinMom = this.linearMomentum * Math.cos(this.relCollAngle);
+      console.log(this.name, "collLinMom:", this.collLinMom);
+      this.collVel = {
+        x: this.collLinMom * Math.cos(this.absCollAngle),
+        y: this.collLinMom * Math.sin(this.absCollAngle)
+      }
+    }  
+    console.log(this.name, "collVel:", this.collVel, "relCollAngle:", this.relCollAngle);
+  }
+
+  _getCollisionAngles(collisionPoint) {
+    this.absCollAngle = Math.atan2(collisionPoint.y - this.center.y, collisionPoint.x - this.center.x);
+    this.relCollAngle = this.absCollAngle - this.angle; // we don't use dot product because then we lose information about the direction 
+  }
+
+  _drawBall() {
+    mainCtx.fillStyle = this.color;
+    mainCtx.beginPath();
+    mainCtx.arc(this.center.x, this.center.y, R, 0, Math.PI * 2);
+    mainCtx.fill(); 
   }
   
+  _checkBorderCollision() {
+    const collisionPoints = [];
+
+    for (let i = 0; i < borderCoords.length; i++) {
+      const point = borderCoords[i];
+      const distToPoint = getDistance(this.center, point);
+      
+      // at some point ball goes from zero collision points to one or more
+      if (distToPoint <= R) { // point inside ball — collision
+        collisionPoints.push(point); 
+      }
+    }
+
+    // handle border collision
+    if (collisionPoints.length > 1) {
+      const validCollisionPoint = findValidCollisionPoint(collisionPoints);
+
+      this._updateVelocities(validCollisionPoint);
+
+      this._updateSteps();
+      this._updateDirectionEndpoint();
+
+      //bounce
+      //this.move();
+ 
+    }
+  }
+
+  _updateVelocities(collisionPoint) {
+    this._getCollisionAngles(collisionPoint);
+    const newDirAngle = this.absCollAngle - Math.PI + this.relCollAngle;
+
+    this.velocity.x = roundTo(this.linearMomentum * Math.cos(newDirAngle), 4);
+    this.velocity.y = roundTo(this.linearMomentum * Math.sin(newDirAngle), 4);
+  }
+
   _updateCirclePoints() {
-    const ballCircumference =  2 * Math.PI * R;
-    const angleStep = 2 * Math.PI / ballCircumference; // angle step between each pixel
     this.circlePoints = [];
+
+    const ballCircumference =  2 * Math.PI * R;
+    const angleStep = 2 * Math.PI / ballCircumference / 20; // angle step between each pixel
 
     let angle = 0;
     while (angle <= Math.PI * 2) {
-      const x = roundTo(this.center.x + R * Math.cos(angle), 2);
-      const y = roundTo(this.center.y + R * Math.sin(angle), 2);
+      const x = this.center.x + R * Math.cos(angle);
+      const y = this.center.y + R * Math.sin(angle);
 
       this.circlePoints.push({ x, y });
       angle += angleStep;
     }
   }
 
-  _findSteps() {
+  _updateSteps() {
     this.step = {};
-    this.step.x = this.velocity.x / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)); // .abs to preserve negative values AND to avoid zero values
-    this.step.y = this.velocity.y / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y));
+    this.step.x = roundTo(this.velocity.x / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)), 3); // .abs to preserve negative values AND to avoid zero values
+    this.step.y = roundTo(this.velocity.y / (Math.abs(this.velocity.x) + Math.abs(this.velocity.y)), 3);
   }
 
   _draw() {
-    this._drawDirectionVector();
     this._drawBall();
+    this._drawDirectionVector();
   }
 
   _spawn() {
@@ -77,33 +143,6 @@ class Ball {
     this.center.y = mainCanvas.height - getRandomInt(R, mainCanvas.height - R); 
 
     this._updateAvailableSpaces();
-  }
-
-  _createDataCanvas() {
-    this.dataCanvas = document.createElement('canvas');
-    this.dataCanvas.width = 100;
-    this.dataCanvas.height = 50;
-    this.dataCanvas.classList.add("data");
-
-    this.dataCtx = this.dataCanvas.getContext('2d'); 
-    this.dataCtx.fillStyle = 'white';
-    this.dataCtx.font = '10px Monospace'; 
-    this.dataCtx.textAlign = 'left';
-    this.dataCtx.textBaseline = 'bottom'; 
-
-    document.getElementById("container").appendChild(this.dataCanvas);
-  }
-
-  _updateData() {
-    this.dataCtx.clearRect(0, 0, this.dataCanvas.width, this.dataCanvas.height);
-
-    this.directionAngle = roundTo(Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x), 2);
-    
-    this.dataCtx.fillText(`angle: ${roundTo(this.directionAngle, 2)}rad`, 0, 10);
-    this.dataCtx.fillText(`V: ${roundTo(this.directionMagnitude, 2)}`, 0, 20);
-    this.dataCtx.fillText(`Vx: ${roundTo(this.velocity.x, 2)}`, 0, 30);
-    this.dataCtx.fillText(`Vy: ${roundTo(this.velocity.y, 2)}`, 0, 40);
-    this.dataCtx.fillText(`tan: ${roundTo(Math.tan(this.directionAngle), 2)}`, 0, 50);
   }
 
   _updateAvailableSpaces() {
@@ -131,108 +170,45 @@ class Ball {
     }
   }    
 
-  _drawBall() {
-    mainCtx.fillStyle = this.color;
-    mainCtx.beginPath();
-    mainCtx.arc(this.center.x, this.center.y, R, 0, Math.PI * 2);
-    mainCtx.fill(); 
-  }
-
   _updateDirectionEndpoint() {
     this.directionEndpoint = { x: this.center.x + this.velocity.x, y: this.center.y + this.velocity.y};
-    this.directionMagnitude = getDistance(this.center.x, this.center.y, this.directionEndpoint.x, this.directionEndpoint.y);
+    this.linearMomentum = getDistance(this.center, this.directionEndpoint);
+    this.angle = Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x);
   }
 
   _drawDirectionVector() {
-    this._updateDirectionEndpoint();
-
-    mainCtx.strokeStyle = "red";
+    mainCtx.strokeStyle = 'black';
     mainCtx.beginPath();
     mainCtx.moveTo(this.center.x, this.center.y);
     mainCtx.lineTo(this.directionEndpoint.x, this.directionEndpoint.y);
     mainCtx.stroke();
   }
 
-  _checkBorderCollision() {
-    const collisionPoints = [];
+  _createDataCanvas() {
+    this.dataCanvas = document.createElement('canvas');
+    this.dataCanvas.width = 100;
+    this.dataCanvas.height = 50;
+    this.dataCanvas.classList.add("data");
 
-    for (let i = 0; i < borderCoords.length; i++) {
-      const point = borderCoords[i];
-      const distanceToPoint = getDistance(this.center.x, this.center.y, point.x, point.y);
+    this.dataCtx = this.dataCanvas.getContext('2d'); 
+    this.dataCtx.fillStyle = 'white';
+    this.dataCtx.font = '10px Monospace'; 
+    this.dataCtx.textAlign = 'left';
+    this.dataCtx.textBaseline = 'bottom'; 
 
-      // at some point ball goes from zero collision points to more than one
-      if (distanceToPoint <= R) { 
-        collisionPoints.push(point); 
-      }
-    }
-
-    if (collisionPoints.length > 1) {
-      // relevant collision point is exactly in the middle
-      const middlePoint = {};
-      middlePoint.x = roundTo((collisionPoints[0].x + collisionPoints[collisionPoints.length - 1].x) / 2, 2);
-      middlePoint.y = roundTo((collisionPoints[0].y + collisionPoints[collisionPoints.length - 1].y) / 2, 2);
-
-      this._calculateCollisionAngle(middlePoint);
-
-      this._findSteps();
-
-      this.center.x = roundTo(this.center.x + this.step.x, 2);
-      this.center.y = roundTo(this.center.y + this.step.y, 2);
-
-      /*
-      mainCtx.fillStyle = 'red';
-      mainCtx.beginPath();
-      mainCtx.arc(middlePoint.x, middlePoint.y, 2, 0, Math.PI * 2);
-      mainCtx.fill(); 
-      */
-    }
+    document.getElementById("container").appendChild(this.dataCanvas);
   }
 
-  _checkBallCollision() {
-    this._getOtherCirclePoints();
+  _updateData() {
+    this.dataCtx.clearRect(0, 0, this.dataCanvas.width, this.dataCanvas.height);
 
-    for (let i = 0; i < this.otherCirclePoints.length; i++) {
-      const circlePoint = this.otherCirclePoints[i];
-      const distanceToPoint = getDistance(this.center.x, this.center.y, circlePoint.x, circlePoint.y);
-
-
-     if (distanceToPoint <= R) { 
-        this._calculateCollisionAngle(circlePoint);
-
-        this._findSteps();
-
-        this.center.x = roundTo(this.center.x + this.step.x, 2);
-        this.center.y = roundTo(this.center.y + this.step.y, 2);
-      }
-    }
-  }
-
-  _calculateCollisionAngle(collisionPoint) {
-    const collAngle = roundTo(Math.atan2(collisionPoint.y - this.center.y, collisionPoint.x - this.center.x), 3);
-    const relCollAngle = collAngle - this.directionAngle;
-    const newDirAngle = collAngle + relCollAngle - Math.PI;
-
-    this.velocity.x = this.directionMagnitude * Math.cos(newDirAngle);
-    this.velocity.y = this.directionMagnitude * Math.sin(newDirAngle);
-  }
-
-  _getOtherCirclePoints() {
-    this.otherCirclePoints = [];
-
-    for (let i = 0; i < balls.length; i++) {
-      if (balls[i].name !== this.name) {
-        const otherBallCirclePoints = balls[i].circlePoints;
-        this.otherCirclePoints.push(...otherBallCirclePoints);
-      }
-    }
-  }
-
-  _checkRolling() { // ball rolls on the ground | for side view only!
-    if (this.center.y >= mainCanvas.height - R && Math.abs(this.velocity.y) <= this.g) { 
-      this.g = 0;
-      this.velocity.y = 0;
-      this.velocity.y *= FRICTION_LOSS; 
-    }
+    this.angle = roundTo(Math.atan2(this.directionEndpoint.y - this.center.y, this.directionEndpoint.x - this.center.x), 3);
+    
+    this.dataCtx.fillText(`angle: ${roundTo(this.angle, 3)}rad`, 0, 10);
+    this.dataCtx.fillText(`V: ${roundTo(this.linearMomentum, 3)}`, 0, 20);
+    this.dataCtx.fillText(`Vx: ${roundTo(this.velocity.x, 3)}`, 0, 30);
+    this.dataCtx.fillText(`Vy: ${roundTo(this.velocity.y, 3)}`, 0, 40);
+    this.dataCtx.fillText(`tan: ${roundTo(Math.tan(this.angle), 3)}`, 0, 50);
   }
 }
 

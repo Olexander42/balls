@@ -7,7 +7,7 @@ body {
   position: relative;
 }
 
-canvas {
+#main-canvas {
   border: solid 1px gray;
 }
 
