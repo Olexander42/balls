@@ -48,7 +48,32 @@ function updateAvailableSpaces(x, y) {
   }
 }
 
-function checkBallsCollisions() {
+function handleCollisions() {
+  // border
+  for (let i = 0; i < balls.length; i++) { 
+    const ball = balls[i]; 
+    const collisionPoints = [];
+
+    for (let i = 0; i < borderCoords.length; i++) {
+      const point = borderCoords[i];
+      const distToPoint = getDistance(ball.center, point);
+      
+      if (distToPoint <= R) { 
+        collisionPoints.push(point); // at some point ball goes from zero collision points to one or more
+      }
+    }
+
+    if (collisionPoints.length > 1) {
+      console.log(ball.color)
+      const validCollisionPoint = findValidCollisionPoint(collisionPoints);
+      //console.log("validCollisionPoint:", validCollisionPoint);
+      ball.updateVelocities(validCollisionPoint);
+
+      ball.updateDirectionEndpoint();
+    }
+  }
+
+  // balls
   for (let i = 0; i < balls.length - 1; i++) { 
     const ballA = balls[i]; 
 
@@ -58,54 +83,53 @@ function checkBallsCollisions() {
       const distanceBetweenCenters = getDistance(ballA.center, ballB.center);
 
       if (distanceBetweenCenters <= R * 2) {
-        console.log(`| ${i + 1} pair |`)
  
         ballA.getCollisionVelocity(ballB.center);
         ballB.getCollisionVelocity(ballA.center);
 
-        const ball1preVel = ballA.velocity;
-        const ball2preVel = ballB.velocity;
-   
-        console.log("____before______")
-        console.table(`${ballA.name}.velocity`, ballA.velocity);
-        console.table(`${ballB.name}.velocity`, ballB.velocity);
+        console.log(ballA.color, "velocity before collision", ballA.velocity);
+        console.log(ballB.color, "velocity before collision", ballB.velocity);
 
         ballA.velocity = {
-          x: ball1preVel.x - ballA.collVel.x + ballB.collVel.x,
-          y: ball1preVel.y - ballA.collVel.y + ballB.collVel.y,
+          x: ballA.velocity.x - ballA.collVel.x + ballB.collVel.x,
+          y: ballA.velocity.y - ballA.collVel.y + ballB.collVel.y,
         }
 
         ballB.velocity = {
-          x: ball2preVel.x - ballB.collVel.x + ballA.collVel.x,
-          y: ball2preVel.y - ballB.collVel.y + ballA.collVel.y,
+          x: ballB.velocity.x - ballB.collVel.x + ballA.collVel.x,
+          y: ballB.velocity.y - ballB.collVel.y + ballA.collVel.y,
         }
 
-        // bounce 
-        ballA.move();
-        ballB.move();
+        ballA.updateDirectionEndpoint();
+        ballB.updateDirectionEndpoint();
 
-        console.log("_____after_____");
-        console.table(`${ballA.name}.velocity`, ballA.velocity);
-        console.table(`${ballB.name}.velocity`, ballB.velocity);
-        console.log("____end of exachange___");
+        console.log(ballA.color, "velocity after collision", ballA.velocity);
+        console.log(ballB.color, "velocity after collision", ballB.velocity);
       }
     }
   }
 }
 
 function findValidCollisionPoint(collisionPoints) {
-  // relevant collision point is exactly in the middle
+  // relevant collision point is exactly in the middle of the array
   const middlePoint = {};
 
-  middlePoint.x = (collisionPoints[0].x + collisionPoints[collisionPoints.length - 1].x) / 2;
-  middlePoint.y = (collisionPoints[0].y + collisionPoints[collisionPoints.length - 1].y) / 2;
+  let sumX = 0;
+  let sumY = 0;
+  for (let i = 0; i < collisionPoints.length; i++) {
+    sumX += collisionPoints[i].x;
+    sumY += collisionPoints[i].y;
+  }
 
+  middlePoint.x = sumX / collisionPoints.length;
+  middlePoint.y = sumY / collisionPoints.length;
+  
   return middlePoint;
 }
 
 function normalizePoint(point, ball) {
-  return { x: point.x - ball.center.x, y: point.y - ball.center.y }
+  return { x: point.x - ball.center.x, y: point.y - ball.center.y };
 }
 
 
-export { ballsFactory, checkBallsCollisions, normalizePoint, findValidCollisionPoint }
+export { ballsFactory, handleCollisions, normalizePoint, findValidCollisionPoint }

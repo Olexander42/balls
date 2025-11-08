@@ -1,53 +1,35 @@
 const mainCanvas = document.querySelector('canvas');
 const mainCtx = mainCanvas.getContext('2d');
 
-const SIDE_VIEW = false; 
-
-const G = 1; 
-
 const FPS = 1; 
-const FRICTION_LOSS = 1 - 0.2 / (1000 / FPS); 
-const COLLISION_LOSS = 0.5;
 const R = 50;
 const MAX_SPEED = 10;
+const EPSILON = 10 ** (-10);
 
+const availableSpaces = [{ xMin: R, xMax: mainCanvas.width - R }]; 
 const balls = [];
 const datas = [];
-const availableSpaces = [{ xMin: R, xMax: mainCanvas.width - R }]; 
+const totalVelocity = {x: 0, y: 0};
+
 
 let borderCoords = () => {
   const borderCoords = [];
+  const pixelStep = 1;
 
-  // left border
-  for (let i = 0; i <= mainCanvas.height; i += 0.1) {
+  // left-right border
+  for (let i = 0; i <= mainCanvas.height; i += pixelStep) {
     const y = i;
-    const x = 0;
-
-    borderCoords.push({x, y});
+    
+    borderCoords.push({x: 0, y});
+    borderCoords.push({x: mainCanvas.width, y});
   }
 
- // top border 
-  for (let i = 0; i <= mainCanvas.width; i += 0.1) {
-    const y = 0;
+ // top-botton border 
+  for (let i = 0; i <= mainCanvas.width; i += pixelStep) {
     const x = i;
 
-    borderCoords.push({x, y});
-  }
-
-  // right border
-  for (let i = 0; i <= mainCanvas.height; i += 0.1) {
-    const y = i;
-    const x = mainCanvas.width;
-
-    borderCoords.push({x, y});
-  }
-
-  // bottom corner
-  for (let i = 0; i <= mainCanvas.width; i += 0.1) {
-    const y = mainCanvas.height;
-    const x = i;
-
-    borderCoords.push({x, y});
+    borderCoords.push({x, y: 0});
+    borderCoords.push({x, y: mainCanvas.height});
   }
 
   return borderCoords;
@@ -55,5 +37,4 @@ let borderCoords = () => {
 
 borderCoords = borderCoords();
 
-
-export { mainCanvas, mainCtx, SIDE_VIEW, G, FPS, FRICTION_LOSS, COLLISION_LOSS, R, MAX_SPEED, balls, datas, availableSpaces, borderCoords }
+export { mainCanvas, mainCtx, FPS, R, MAX_SPEED, EPSILON, availableSpaces, balls, datas, totalVelocity, borderCoords }

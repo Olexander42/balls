@@ -1,4 +1,4 @@
-import { R }  from "./constants.js";
+import { R, EPSILON }  from "./constants.js";
 
 
 function choose(array) {
@@ -38,4 +38,13 @@ function getAngleBetween(point1, point2) {
   return angle;
 }
 
-export { choose, getRandomInt, roundTo, getDistance, getAngleBetween, getDotProduct }
+function noiseFilter(angle) {
+  const output = {
+    cos: Math.abs(Math.cos(angle)) > EPSILON ? Math.cos(angle) : 0, 
+    sin: Math.abs(Math.sin(angle)) > EPSILON ? Math.sin(angle) : 0
+  }
+
+  return output;
+}
+
+export { choose, getRandomInt, roundTo, getDistance, getAngleBetween, getDotProduct, noiseFilter }

@@ -28,11 +28,10 @@ class Data {
     this.dataCanvas.style.top = `${this.ball.center.y - R / 2}px`;
 
     // data
-    this.dataCtx.fillText(`angle: ${roundTo(this.ball.angle, 3)}rad`, 0, 10);
+    this.dataCtx.fillText(`angle: ${roundTo(this.ball.dirAngle, 3)}rad`, 0, 10);
     this.dataCtx.fillText(`V: ${roundTo(this.ball.linearMomentum, 3)}`, 0, 20);
     this.dataCtx.fillText(`Vx: ${roundTo(this.ball.velocity.x, 3)}`, 0, 30);
     this.dataCtx.fillText(`Vy: ${roundTo(this.ball.velocity.y, 3)}`, 0, 40);
-    this.dataCtx.fillText(`tan: ${roundTo(Math.tan(this.ball.angle), 3)}`, 0, 50);
   }
 }
 
