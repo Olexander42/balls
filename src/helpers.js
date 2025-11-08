@@ -1,6 +1,6 @@
 import Ball from "./Ball.js";
 import { availableSpaces, balls, mainCanvas, mainCtx, R, borderCoords } from "./constants.js";
-import { choose, getDistance, getAngleBetween } from "./utils.js";
+import { choose, getDistance, getAngleBetween, noiseFilter } from "./utils.js";
 
 function ballsFactory(num) {
   const colors = ["red", "blue", "orange", "yellow", "green", "indigo", "violet", "silver"];
@@ -69,6 +69,9 @@ function handleCollisions() {
       //console.log("validCollisionPoint:", validCollisionPoint);
       ball.updateVelocities(validCollisionPoint);
 
+      const displcBall = getCollisionDisplacement(ball, validCollisionPoint);
+      possitionCorrection(ball, displcBall);
+
       ball.updateDirectionEndpoint();
     }
   }
@@ -87,8 +90,17 @@ function handleCollisions() {
         ballA.getCollisionVelocity(ballB.center);
         ballB.getCollisionVelocity(ballA.center);
 
+        /*
         console.log(ballA.color, "velocity before collision", ballA.velocity);
         console.log(ballB.color, "velocity before collision", ballB.velocity);
+        */
+
+        const displcBallA = getCollisionDisplacement(ballA, ballB.center);
+        const displcBallB = getCollisionDisplacement(ballB, ballA.center);
+
+        possitionCorrection(ballA, displcBallA);
+        possitionCorrection(ballB, displcBallB);
+
 
         ballA.velocity = {
           x: ballA.velocity.x - ballA.collVel.x + ballB.collVel.x,
@@ -102,9 +114,10 @@ function handleCollisions() {
 
         ballA.updateDirectionEndpoint();
         ballB.updateDirectionEndpoint();
-
+        /*
         console.log(ballA.color, "velocity after collision", ballA.velocity);
         console.log(ballB.color, "velocity after collision", ballB.velocity);
+        */
       }
     }
   }
@@ -129,6 +142,36 @@ function findValidCollisionPoint(collisionPoints) {
 
 function normalizePoint(point, ball) {
   return { x: point.x - ball.center.x, y: point.y - ball.center.y };
+}
+
+function getCollisionDisplacement(ball, collisionPoint) {
+  let absDisplc = R - getDistance(ball.center, collisionPoint);
+  console.log(ball.color, "distance:", getDistance(ball.center, collisionPoint));
+  if (absDisplc < 0) absDisplc = (absDisplc + R) / 2; // collision between balls 
+  
+  const absDisplcVelocity = {
+    x: absDisplc * noiseFilter(ball.absCollAngle).cos,
+    y: absDisplc * noiseFilter(ball.absCollAngle).sin,
+  }  
+
+  const relDisplc = Math.abs(noiseFilter(ball.absCollAngle).cos) >= Math.abs(noiseFilter(ball.dirAngle).sin) // horizontal or vertical collision?
+    ? absDisplcVelocity.x / noiseFilter(ball.dirAngle).cos // vertical collision
+    : absDisplcVelocity.y / noiseFilter(ball.dirAngle).sin; // horizontal collison
+  
+  const relDisplcVelocity = {
+    x: relDisplc * noiseFilter(ball.dirAngle).cos,
+    y: relDisplc * noiseFilter(ball.dirAngle).sin,
+  }  
+
+  console.log("absDisplc:", absDisplc, "|", "absDisplcVelocity:", absDisplcVelocity);
+  console.log("relDisplc:", relDisplc, "|", "relDisplcVelocity:", relDisplcVelocity);
+
+  return relDisplcVelocity;
+}
+
+function possitionCorrection(ball, displc) {
+  ball.center.x -= displc.x;
+  ball.center.y -= displc.y;
 }
 
 

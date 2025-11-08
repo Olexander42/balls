@@ -5,9 +5,9 @@ import { balls, datas, FPS, mainCanvas, mainCtx, totalVelocity } from "./constan
 
 //ballsFactory(10);
 // what if they just touch one another aka relCollAngle === PI / 2 for both balls? // stop being fancy and simplify the border logic
-balls.push(new Ball("ball1", 'green', { x:300, y:150 }, { x: 7, y: 13 }));
-balls.push(new Ball("ball2", 'red', { x:300, y:250 }, { x: 0, y: 0 }));
-//balls.push(new Ball("ball4", 'orange', {x:300, y:350}, {x: 0, y: -10}));
+//balls.push(new Ball("ball1", 'green', { x:300, y:150 }, { x: 10, y: 10 }));
+balls.push(new Ball("ball2", 'red', { x:201, y:220 }, { x: 10, y:10 }));
+balls.push(new Ball("ball4", 'orange', { x:300, y:350 }, {x:10, y:10 }));
 
 for (let i = 0; i < balls.length; i++) {
   datas.push(new Data(balls[i]));
@@ -24,6 +24,7 @@ document.querySelector('html').addEventListener('keydown', (e) => {
 
       ball.action();
       datas[i].update();
+      //balls[i].draw();
 
 
       KE += 0.5 * (ball.velocity.x ** 2 + ball.velocity.y ** 2);
@@ -32,18 +33,18 @@ document.querySelector('html').addEventListener('keydown', (e) => {
     handleCollisions();
 
     for (let i = 0; i < balls.length; i++) { // only draw after all calculations are done
-      balls[i]._draw();
+      balls[i].draw();
     }
   }
 
   else if (e.code === 'Digit1' || e.code === 'Numpad1') {
     balls[0].action();
-    balls[1]._draw();
+    balls[1].draw();
   }
 
   else if (e.code === 'Digit2' || e.code === 'Numpad2') {
     balls[1].action();
-    balls[0]._draw();
+    balls[0].draw();
   }
 
   else if (e.code === 'ArrowUp') {
