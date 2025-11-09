@@ -123,10 +123,6 @@ function findValidCollisionPoint(collisionPoints) {
   return middlePoint;
 }
 
-function normalizePoint(point, ball) {
-  return { x: point.x - ball.center.x, y: point.y - ball.center.y };
-}
-
 function correctPosition(ball, collisionPoint) {
   const absDisplc = R - getDistance(ball.center, collisionPoint);
   const relDisplc = getRelativeDisplacement(ball, absDisplc);
@@ -136,33 +132,33 @@ function correctPosition(ball, collisionPoint) {
 
 
 function correctPositions(ball1, ball2, type) {
-  const totalCollMomentum = ball1.collLinMom + ball2.collLinMom;
+  const totalCollMomentum = Math.abs(ball1.collLinMom) + Math.abs(ball2.collLinMom);
+  console.log("totalCollMomentum:", totalCollMomentum);
   const totalAbsDisplc = 2 * R - getDistance(ball1.center, ball2.center);
-  const absDisplc1 = ball1.collLinMom * (totalAbsDisplc / totalCollMomentum);
-  const absDisplc2 = ball2.collLinMom * (totalAbsDisplc / totalCollMomentum);
   console.log("totalAbsDisplc:", totalAbsDisplc);
-  console.log(ball1.color, absDisplc1, ball2.color, absDisplc2);
 
+  // each ball's "share" in the overlap | displace equals momentum magnitude
+  const k1 = Math.abs(ball1.collLinMom) / totalCollMomentum; 
+  const k2 = Math.abs(ball2.collLinMom) / totalCollMomentum; 
+
+  const absDisplc1 = totalAbsDisplc * k1;
+  const absDisplc2 = totalAbsDisplc* k2;
+  console.log(ball1.color, "absDisplc:", absDisplc1, "|", ball2.color, "absDisplc:", absDisplc2);
+
+  // find displacement projection on ball direction
   const relDisplc1 = getRelativeDisplacement(ball1, absDisplc1);
   const relDisplc2 = getRelativeDisplacement(ball2, absDisplc2);
+  console.log(ball1.color, "relDisplc:", relDisplc1, "|", ball2.color, "relDisplc:", relDisplc2 )
 
-  console.log(ball1.color, "relDisplc:", relDisplc1, ball2.color, "relDisplc:", relDisplc2);
+  /*
+  const relDisplc1 = getRelativeDisplacement(ball1, absDisplc1);
+  const relDisplc2 = getRelativeDisplacement(ball2, absDisplc2);
+  */
+
+  //console.log(ball1.color, "relDisplc:", relDisplc1, "|", ball2.color, "relDisplc:", relDisplc2);
 
   moveBack(ball1, relDisplc1);
   moveBack(ball2, relDisplc2);
-}
-
-function getRelativeDisplacement(ball, absDisplc) {
-  const absDisplcVelocity = {
-    x: absDisplc * noiseFilter(ball.absCollAngle).cos,
-    y: absDisplc * noiseFilter(ball.absCollAngle).sin,
-  }  
-
-  const relDisplc = Math.abs(noiseFilter(ball.absCollAngle).cos) >= Math.abs(noiseFilter(ball.dirAngle).sin) // horizontal or vertical collision?
-    ? absDisplcVelocity.x / noiseFilter(ball.dirAngle).cos // vertical collision
-    : absDisplcVelocity.y / noiseFilter(ball.dirAngle).sin; // horizontal collison
-
-  return relDisplc;
 }
 
 function moveBack(ball, relDisplc) {
@@ -174,6 +170,14 @@ function moveBack(ball, relDisplc) {
   ball.center.x -= relDisplcVelocity.x;
   ball.center.y -= relDisplcVelocity.y;
   console.log(ball.color, "center after correction:", ball.center);
+}
+
+function getRelativeDisplacement(ball, absDisplc) {
+  return absDisplc / Math.cos(ball.relCollAngle);
+}
+
+function normalizePoint(point, ball) {
+  return { x: point.x - ball.center.x, y: point.y - ball.center.y };
 }
 
 

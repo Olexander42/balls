@@ -5,8 +5,8 @@ import { balls, datas, FPS, mainCanvas, mainCtx, totalVelocity } from "./constan
 
 
 // balls escape the playground
-balls.push(new Ball("ball1", 'green', { x:300, y:200 }, { x: -25, y: 0 }));
-balls.push(new Ball("ball2", 'red', { x:159, y:200 }, { x: 40, y: 23}));
+balls.push(new Ball("ball1", 'green', { x:300, y:250 }, { x: -31, y: 0 }));
+balls.push(new Ball("ball2", 'red', { x:160, y:200 }, { x: -1, y: 0}));
 balls.push(new Ball("ball4", 'orange', { x:300, y:350 }, {x:24, y:15 })); 
 
 for (let i = 0; i < balls.length; i++) {
@@ -19,12 +19,11 @@ document.querySelector('html').addEventListener('keydown', (e) => {
   }
 })
 
+let count = 0;
 const action = () => {
   mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
   let KE = 0;
-
   for (let i = 0; i < balls.length; i++) {
-    console.log("________");
     const ball = balls[i];
 
     ball.action();
@@ -35,13 +34,15 @@ const action = () => {
   }
 
   handleCollisions();
-  console.log("KE:", KE);
 
   for (let i = 0; i < balls.length; i++) { // only draw after all calculations are done
    balls[i].draw();
   }
 
-  requestAnimationFrame(action);
+  count++; 
+  console.log(count);
+
+  //requestAnimationFrame(action);
 }
 
 //requestAnimationFrame(action);
