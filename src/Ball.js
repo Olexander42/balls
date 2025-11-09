@@ -17,7 +17,6 @@ class Ball {
   action() {
     this.center.x += this.velocity.x;
     this.center.y += this.velocity.y;
-    console.log(this.color, "center:", this.center);
   }
 
   updateDirectionEndpoint() {
@@ -56,8 +55,6 @@ class Ball {
       x: this.collLinMom * noiseFilter(this.absCollAngle).cos,
       y: this.collLinMom * noiseFilter(this.absCollAngle).sin,
     }
-
-    console.log(this.color, "absCollAngle:", this.absCollAngle, "relCollAngle:", this.relCollAngle, "linearMomentum:", this.linearMomentum, "|", "collLinMom:", this.collLinMom, "|", "collVel:", this.collVel);
   }
 
   updateVelocities(collisionPoint) {
@@ -73,7 +70,7 @@ class Ball {
     this.velocity.x = newVelocity.x;
     this.velocity.y = newVelocity.y;
 
-    console.log("velocity:", this.velocity);
+
   }   
 
   _getCollisionAngles(collisionPoint) {
